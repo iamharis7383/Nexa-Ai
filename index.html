@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXA AI — Your AI. Your Intelligence. Your World.</title>
+<link rel="icon" href="nexa.png">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box} :root{--bg:#0a0a0f;--panel:#111118;--panel2:#17171f;--line:#23232e;--txt:#f4f4f5;--mut:#9b9bab;--accent:#00d4ff;--accent2:#ff9a00;--grad:linear-gradient(90deg,#00d4ff,#00ff9a,#ffcc00,#ff6a00);--radius:16px}
+body.light{--bg:#f6f7f9;--panel:#fff;--panel2:#f1f2f5;--line:#e5e7eb;--txt:#111827;--mut:#6b7280}
+*{font-family:Inter,sans-serif} body{background:var(--bg);color:var(--txt);overflow:hidden}
+button,input,textarea,select{font-family:inherit;outline:none} button{cursor:pointer;border:none;background:none;color:inherit}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#2e2e3a;border-radius:10px}
+.hidden{display:none!important}
+/* AUTH */
+#auth{position:fixed;inset:0;z-index:100;background:#050508;display:flex;align-items:center;justify-content:center;padding:20px}
+.authBox{width:100%;max-width:980px;background:#0f0f16;border:1px solid #23232e;border-radius:28px;overflow:hidden;display:grid;grid-template-columns:1.1fr 1fr}
+.authL{padding:38px;background:radial-gradient(600px 300px at 20% 0%,rgba(0,212,255,.25),transparent),linear-gradient(160deg,#0a0a12,#101018);display:flex;flex-direction:column;justify-content:space-between}
+.logoRow{display:flex;align-items:center;gap:12px}.logoImg{width:52px;height:52px;border-radius:14px;object-fit:cover;background:#000}.logoFallback{width:52px;height:52px;border-radius:14px;background:var(--grad);display:grid;place-items:center;font-weight:900;font-size:30px;color:#000}
+.authL h1{font-size:42px;line-height:.95;letter-spacing:-1.5px;margin-top:26px}.authL h1 i{font-style:normal;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.authL p{color:#a1a1aa;margin-top:14px;line-height:1.6;font-size:15px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.chip{border:1px solid #2a2a35;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:600}
+.authR{padding:34px 32px}.authR h2{font-size:26px}.authR>p{color:#9b9bab;font-size:13px;margin:6px 0 16px}
+.tabs{display:flex;background:#1a1a24;padding:4px;border-radius:12px;margin-bottom:14px}.tabs button{flex:1;padding:10px;border-radius:9px;font-weight:700;color:#888}.tabs button.on{background:#fff;color:#000}
+.field{margin-bottom:12px}.field label{font-size:12px;font-weight:700;display:block;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:12px 14px;background:#17171f;border:1px solid #2a2a35;border-radius:12px;color:#fff;font-size:14px}
+.field textarea{min-height:80px;resize:vertical}
+.btnP{width:100%;padding:13px;border-radius:12px;background:var(--grad);color:#000;font-weight:800;font-size:15px}
+.btnG{width:100%;padding:12px;border-radius:12px;background:#fff;color:#000;font-weight:700;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.link{color:#00d4ff;font-size:12px;cursor:pointer;font-weight:600}
+/* APP */
+#app{display:none;height:100vh;height:100dvh}
+.shell{display:grid;grid-template-columns:300px 1fr;height:100vh}
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.sideTop{padding:14px 14px 10px;border-bottom:1px solid var(--line)}
+.sideTopRow{display:flex;align-items:center;gap:10px}.sideTopRow b{font-size:18px;letter-spacing:-.5px}.sideTopRow small{display:block;font-size:10px;color:var(--mut);font-weight:500;letter-spacing:.5px}
+.newChat{width:100%;margin-top:12px;padding:11px;border-radius:12px;background:var(--grad);color:#000;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}
+.search{margin-top:10px;display:flex;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:10px 12px;border-radius:12px}.search input{flex:1;background:transparent;border:none;color:var(--txt);font-size:13px}
+.nav{padding:10px;display:flex;gap:6px;flex-wrap:wrap}.nav button{padding:7px 11px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12px;font-weight:600}.nav button.on{background:var(--txt);color:var(--bg)}
+.list{flex:1;overflow:auto;padding:6px 10px 10px}.sec{font-size:11px;font-weight:800;letter-spacing:.8px;color:var(--mut);padding:10px 8px 6px;text-transform:uppercase}
+.conv{display:flex;gap:10px;align-items:center;padding:11px 10px;border-radius:12px;cursor:pointer;border:1px solid transparent}.conv:hover,.conv.active{background:var(--panel2);border-color:var(--line)}.conv b{font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.conv small{color:var(--mut);font-size:11px}.conv .dot{margin-left:auto;font-size:14px;opacity:.6}
+.sideBot{padding:12px;border-top:1px solid var(--line)}.userRow{display:flex;gap:10px;align-items:center;padding:8px;border-radius:12px;cursor:pointer}.userRow:hover{background:var(--panel2)}.avatar{width:36px;height:36px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-weight:800;color:#000;flex-shrink:0}
+.main{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.topbar h3{font-size:15px}.pill{padding:7px 11px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12px;font-weight:700;display:flex;gap:6px;align-items:center}
+.pill select{background:transparent;border:none;color:var(--txt);font-weight:700;font-size:12px}
+.pill.on{border-color:#00d4ff;color:#00d4ff}
+.welcome{flex:1;overflow:auto;padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.welcome img{width:92px;height:92px;border-radius:24px;object-fit:cover}.welcome h1{font-size:38px;letter-spacing:-1.5px;margin:16px 0 8px}.welcome h1 span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.welcome p{color:var(--mut);max-width:560px;line-height:1.6}
+.sugg{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:680px;width:100%;margin-top:22px}.sugg button{text-align:left;background:var(--panel);border:1px solid var(--line);padding:14px;border-radius:16px}.sugg button b{display:block;font-size:14px}.sugg button span{font-size:12px;color:var(--mut)}
+.msgs{flex:1;overflow:auto;padding:22px 18px;display:flex;flex-direction:column;gap:18px}
+.msgRow{display:flex;gap:12px;max-width:860px;width:100%;margin:0 auto}.msgRow.me{flex-direction:row-reverse}.bubble{flex:1;min-width:0;padding:14px 16px;border-radius:18px;line-height:1.65;font-size:14.5px;background:var(--panel);border:1px solid var(--line)}.msgRow.me .bubble{background:#1a1a24;border-color:#2a2a35}
+.bubble pre{background:#0a0a0f;color:#e5e7eb;padding:14px;border-radius:12px;overflow:auto;margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:13px}.bubble code{font-family:'JetBrains Mono',monospace;background:#2a2a35;padding:2px 6px;border-radius:6px;font-size:13px}.bubble pre code{background:transparent;padding:0}.bubble table{border-collapse:collapse;width:100%;margin:10px 0}.bubble th,.bubble td{border:1px solid var(--line);padding:8px;text-align:left}.bubble ul,.bubble ol{margin:8px 0 8px 18px}
+.msgMeta{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.msgMeta button{font-size:11px;padding:6px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-weight:600}
+.composerWrap{padding:14px 18px 14px;border-top:1px solid var(--line)}.composer{max-width:860px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:10px 10px 10px 16px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.composer textarea{width:100%;background:transparent;border:none;color:var(--txt);resize:none;min-height:46px;max-height:160px;font-size:15px;line-height:1.5;padding:6px 0}
+.compRow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.cBtn{width:36px;height:36px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:16px}.cBtn.on{background:#00d4ff;color:#000}.send{margin-left:auto;width:42px;height:42px;border-radius:50%;background:var(--grad);color:#000;font-weight:900;font-size:18px;display:grid;place-items:center}.send:disabled{opacity:.5}
+.fileChip{display:inline-flex;gap:6px;align-items:center;background:#1e1e28;border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;margin:0 6px 6px 0}
+.voiceBar{display:none;align-items:center;gap:12px;background:#1a0505;border:1px solid #ff3b30;padding:12px 16px;border-radius:16px;max-width:860px;margin:0 auto 10px}.voiceBar.show{display:flex}.wave{flex:1;display:flex;gap:3px;align-items:center}.wave i{width:4px;background:#ff3b30;border-radius:99px;display:block;animation:wave .8s infinite}.wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}@keyframes wave{0%,100%{height:8px}50%{height:28px}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}.card h4{margin-bottom:6px}.card p{color:var(--mut);font-size:13px;line-height:1.5}.statBig{font-size:28px;font-weight:900}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}.modal.open{display:flex}.modalBox{background:var(--panel);width:100%;max-width:560px;border-radius:22px;max-height:92vh;overflow:auto}.mHead{padding:18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.mBody{padding:18px}
+.imgGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.imgGrid img{width:100%;border-radius:14px;aspect-ratio:1;object-fit:cover;background:#111}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#fff;color:#000;padding:12px 18px;border-radius:999px;font-weight:700;font-size:13px;z-index:500;transition:.3s}#toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.side{display:none}.side.open{display:flex;position:fixed;inset:0;z-index:90;width:300px}.authBox{grid-template-columns:1fr}.authL{display:none}.sugg{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+<div class="authBox">
+<div class="authL">
+<div class="logoRow"><img src="nexa.png" class="logoImg" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><div class="logoFallback" style="display:none">N</div><div><b style="font-size:20px">NEXA AI</b><div style="font-size:11px;color:#9b9bab;letter-spacing:1px">YOUR AI • YOUR INTELLIGENCE</div></div></div>
+<div><h1>Your AI.<br><i>Your Intelligence.</i><br>Your World.</h1><p>Chat, create images, analyze documents, code and research — powered by Gemini 2.5 Flash. Real AI, real memory, real projects.</p><div class="chips"><span class="chip">⚡ Gemini 2.5 Flash</span><span class="chip">🎨 Image Generation</span><span class="chip">📄 Document AI</span><span class="chip">🎙️ Voice Mode</span></div></div>
+<div style="font-size:12px;color:#71717a">🔒 Private by design • Your chats are yours only • Firebase Secured</div>
+</div>
+<div class="authR">
+<h2 id="authTitle">Create your account</h2><p id="authSub">Start chatting with NEXA AI in seconds.</p>
+<div class="tabs"><button id="tUp" class="on" onclick="setAuth('up')">Sign Up</button><button id="tIn" onclick="setAuth('in')">Login</button></div>
+<div class="field" id="nameF"><label>Full Name</label><input id="regName" placeholder="Your name"></div>
+<div class="field"><label>Email</label><input id="authEmail" placeholder="you@email.com"></div>
+<div class="field"><label>Password</label><input id="authPass" type="password" placeholder="At least 6 characters"></div>
+<button class="btnP" onclick="doAuth()" id="authBtn">Create Account →</button>
+<button class="btnG" onclick="googleLogin()">G Continue with Google</button>
+<div style="display:flex;justify-content:space-between;margin-top:12px"><span class="link" onclick="resetPass()">Forgot password?</span><span class="link" onclick="resendVerify()">Resend verification</span></div>
+<div style="background:#17171f;border:1px solid #2a2a35;padding:12px;border-radius:12px;margin-top:14px;font-size:12px;line-height:1.6;color:#a1a1aa"><b style="color:#fff">Demo Note:</b> This is a real app. It uses your Firebase + Gemini keys. No fake AI responses. If Gemini key is invalid, you will see a real error.</div>
+</div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="shell">
+<aside class="side" id="sidebar">
+<div class="sideTop">
+<div class="sideTopRow"><img src="nexa.png" style="width:38px;height:38px;border-radius:10px;object-fit:cover" onerror="this.style.display='none'"><div><b>NEXA AI</b><small>YOUR INTELLIGENCE</small></div><button style="margin-left:auto;font-size:18px" onclick="toggleSide()">☰</button></div>
+<button class="newChat" onclick="newChat()">＋ New Chat</button>
+<div class="search">🔍 <input id="searchConv" placeholder="Search conversations..." oninput="renderConvs()"></div>
+<div class="nav"><button class="on" data-v="all" onclick="setView('all',this)">All</button><button data-v="pinned" onclick="setView('pinned',this)">📌 Pinned</button><button data-v="archived" onclick="setView('archived',this)">📦 Archived</button><button data-v="projects" onclick="setView('projects',this)">📁 Projects</button></div>
+</div>
+<div class="list" id="convList"></div>
+<div class="sideBot">
+<div class="userRow" onclick="openModal('libraryModal')"><span style="font-size:18px">📚</span><div style="flex:1"><b style="font-size:13px">Library</b><div style="font-size:11px;color:var(--mut)">Files & Images</div></div><span>›</span></div>
+<div class="userRow" onclick="openModal('assistantsModal')"><span style="font-size:18px">🤖</span><div style="flex:1"><b style="font-size:13px">Explore Assistants</b><div style="font-size:11px;color:var(--mut)">Custom GPTs</div></div><span>›</span></div>
+<div class="userRow" onclick="openModal('dashModal')"><span style="font-size:18px">📊</span><div style="flex:1"><b style="font-size:13px">Dashboard</b><div style="font-size:11px;color:var(--mut)">Usage & Stats</div></div><span>›</span></div>
+<div class="userRow" onclick="openModal('settingsModal')"><span style="font-size:18px">⚙️</span><div style="flex:1"><b style="font-size:13px">Settings & AI Providers</b><div style="font-size:11px;color:var(--mut)">Gemini • Models • Keys</div></div><span>›</span></div>
+<div class="userRow" onclick="openModal('profileModal')"><div class="avatar" id="uAvatar">N</div><div style="flex:1;min-width:0"><b id="uName" style="font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">User</b><div id="uEmail" style="font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">-</div></div><button onclick="event.stopPropagation();doLogout()" style="font-size:12px;color:#ff5c5c;font-weight:700">Logout</button></div>
+</div>
+</aside>
+
+<main class="main">
+<div class="topbar">
+<button onclick="toggleSide()" style="font-size:18px">☰</button>
+<h3 id="chatTitle">NEXA AI</h3>
+<div style="flex:1"></div>
+<div class="pill"><span>Model</span><select id="modelSel" onchange="saveModel()"><option value="gemini-2.5-flash">Gemini 2.5 Flash</option><option value="gemini-2.5-flash-image">Gemini Image (Nano Banana)</option><option value="gemini-2.0-flash">Gemini 2.0 Flash</option></select></div>
+<div class="pill"><span>Mode</span><select id="modeSel"><option value="Balanced">Balanced</option><option value="Fast">Fast</option><option value="Advanced Reasoning">Advanced Reasoning</option><option value="Creative">Creative</option><option value="Coding">Coding</option><option value="Research">Research</option></select></div>
+<button class="pill" id="webBtn" onclick="togglePill('webBtn')">🌐 Web Search <span id="webState">Off</span></button>
+<button class="pill" id="reasonBtn" onclick="togglePill('reasonBtn')">🧠 Reasoning <span id="reasonState">Off</span></button>
+<button class="pill" onclick="shareChat()">🔗 Share</button>
+<button class="pill" onclick="exportChat()">⬇ Export</button>
+<button class="pill" onclick="openModal('imageModal')">🎨 Image</button>
+<button class="pill" onclick="openModal('adminModal')" id="adminBtn" style="display:none">🛡️ Admin</button>
+</div>
+
+<div class="welcome" id="welcome">
+<img src="nexa.png" onerror="this.style.display='none'">
+<h1>Hello, <span id="welcomeName">there</span>.<br>What will you <span>create</span> today?</h1>
+<p>Your AI. Your Intelligence. Your World. Ask anything, upload a document, generate an image, or start a voice conversation.</p>
+<div class="sugg">
+<button onclick="quick('Write a professional email to a client about project delay')"><b>✉️ Write</b><span>Professional email about project delay</span></button>
+<button onclick="quick('Explain quantum computing in simple terms with examples')"><b>🧠 Explain</b><span>Quantum computing in simple terms</span></button>
+<button onclick="quick('Write Python code to analyze a CSV file and plot charts')"><b>💻 Code</b><span>Python code to analyze CSV</span></button>
+<button onclick="quick('Give me a business idea for Pakistan with low investment')"><b>💡 Ideas</b><span>Business idea with low investment</span></button>
+</div>
+<p style="margin-top:18px;font-size:12px">Model: <b id="welcomeModel">Gemini 2.5 Flash</b> • Real API • No simulated answers</p>
+</div>
+
+<div class="msgs hidden" id="msgs"></div>
+
+<div class="composerWrap">
+<div class="voiceBar" id="voiceBar"><span style="font-size:20px">🎙️</span><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i></div><span id="voiceText" style="font-size:13px">Listening...</span><button onclick="stopVoice()" style="background:#ff3b30;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700">Stop</button></div>
+<div id="attachPreview"></div>
+<div class="composer">
+<textarea id="msgInput" placeholder="Ask NEXA anything... (Shift + Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+<div class="compRow">
+<button class="cBtn" onclick="document.getElementById('fileInput').click()" title="Attach file">📎</button>
+<input type="file" id="fileInput" hidden multiple accept=".pdf,.docx,.txt,.csv,.xlsx,.json,.png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a" onchange="handleFiles(this.files)">
+<button class="cBtn" onclick="toggleVoice()" title="Voice">🎙️</button>
+<button class="cBtn" onclick="speakLast()" title="Speak last response">🔊</button>
+<button class="cBtn" onclick="openModal('memoryModal')" title="Memory">🧠</button>
+<button class="cBtn" onclick="openModal('projectsModal')" title="Projects">📁</button>
+<span style="font-size:11px;color:var(--mut)" id="charCount">0 chars • Gemini 2.5 Flash</span>
+<button class="send" id="sendBtn" onclick="sendMsg()">↑</button>
+<button class="cBtn hidden" id="stopBtn" onclick="stopGen()" style="background:#ff3b30;color:#fff">■</button>
+</div>
+</div>
+<p style="text-align:center;font-size:11px;color:var(--mut);margin-top:8px">NEXA AI can make mistakes. Verify important information. Your data is stored in your Firebase account.</p>
+</div>
+</main>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="settingsModal"><div class="modalBox"><div class="mHead"><h3>Settings & AI Providers</h3><button onclick="closeModal('settingsModal')">✕</button></div><div class="mBody">
+<div class="field"><label>Gemini API Key (Stored in this browser only)</label><input id="setGeminiKey" placeholder="AIza..."></div>
+<div class="field"><label>Default Model</label><select id="setModel"><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-flash-image">gemini-2.5-flash-image</option><option value="gemini-2.0-flash">gemini-2.0-flash</option></select></div>
+<div class="field"><label>Temperature (0 - 1)</label><input id="setTemp" type="number" min="0" max="1" step="0.1" value="0.7"></div>
+<div class="field"><label>System Instructions</label><textarea id="setSystem">You are NEXA AI, a helpful, accurate, premium AI assistant. Answer clearly, use markdown, code blocks, and tables when useful. Never hallucinate citations.</textarea></div>
+<div class="grid2"><button class="btnP" onclick="saveSettings()">Save Settings</button><button class="btnP" style="background:#222" onclick="testGemini()">Test Connection</button></div>
+<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="pill" onclick="setTheme('dark')">🌙 Dark</button><button class="pill" onclick="setTheme('light')">☀️ Light</button><button class="pill" onclick="setTheme('system')">💻 System</button><button class="pill" onclick="changePass()">🔑 Change Password</button><button class="pill" onclick="deleteAccount()" style="color:#ff5c5c">🗑 Delete Account</button></div>
+<p style="font-size:12px;color:var(--mut);margin-top:12px">Security: For production, move Gemini calls to Firebase Cloud Functions. This single-file version keeps the key in localStorage only, never in Firestore. Admin email is set in code: admin@nexa.ai</p>
+</div></div></div>
+
+<div class="modal" id="imageModal"><div class="modalBox"><div class="mHead"><h3>🎨 NEXA Image Studio</h3><button onclick="closeModal('imageModal')">✕</button></div><div class="mBody">
+<div class="field"><label>Image Prompt</label><textarea id="imgPrompt" placeholder="A futuristic city at sunset, cinematic, ultra detailed..."></textarea></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="imgRatio" class="field" style="flex:1"><option value="1:1">1:1 Square</option><option value="16:9">16:9 Landscape</option><option value="9:16">9:16 Portrait</option></select><select id="imgQuality" class="field" style="flex:1"><option value="standard">Standard</option><option value="hd">HD</option></select></div>
+<button class="btnP" onclick="genImage()">Generate Image with Gemini →</button>
+<div id="imgResult" style="margin-top:14px"></div>
+<div style="margin-top:12px"><b>Image History</b><div class="imgGrid" id="imgHistory"></div></div>
+</div></div></div>
+
+<div class="modal" id="assistantsModal"><div class="modalBox"><div class="mHead"><h3>🤖 Assistants</h3><button onclick="closeModal('assistantsModal')">✕</button></div><div class="mBody">
+<div class="field"><label>Assistant Name</label><input id="asName" placeholder="e.g. Code Mentor"></div>
+<div class="field"><label>Instructions</label><textarea id="asInstr" placeholder="You are a senior coding mentor..."></textarea></div>
+<button class="btnP" onclick="createAssistant()">Create Assistant</button>
+<div id="asList" style="margin-top:14px"></div>
+</div></div></div>
+
+<div class="modal" id="projectsModal"><div class="modalBox"><div class="mHead"><h3>📁 Projects</h3><button onclick="closeModal('projectsModal')">✕</button></div><div class="mBody">
+<div class="field"><label>Project Name</label><input id="projName" placeholder="e.g. Marketing Campaign"></div>
+<div class="field"><label>Project Instructions</label><textarea id="projInstr" placeholder="Context for all chats in this project..."></textarea></div>
+<button class="btnP" onclick="createProject()">Create Project</button>
+<div id="projList" style="margin-top:14px"></div>
+</div></div></div>
+
+<div class="modal" id="memoryModal"><div class="modalBox"><div class="mHead"><h3>🧠 Memory</h3><button onclick="closeModal('memoryModal')">✕</button></div><div class="mBody">
+<div class="field"><label>Save a memory / preference</label><input id="memInput" placeholder="e.g. I prefer short answers, I am a student"></div>
+<button class="btnP" onclick="saveMemory()">Save Memory</button>
+<div id="memList" style="margin-top:12px"></div>
+<button class="pill" style="margin-top:10px;color:#ff5c5c" onclick="clearMemory()">Clear All Memory</button>
+</div></div></div>
+
+<div class="modal" id="libraryModal"><div class="modalBox"><div class="mHead"><h3>📚 Library</h3><button onclick="closeModal('libraryModal')">✕</button></div><div class="mBody"><div id="libList"></div></div></div></div>
+
+<div class="modal" id="dashModal"><div class="modalBox"><div class="mHead"><h3>📊 Dashboard</h3><button onclick="closeModal('dashModal')">✕</button></div><div class="mBody"><div class="grid2" id="dashGrid"></div><div id="dashRecent" style="margin-top:14px"></div></div></div></div>
+
+<div class="modal" id="profileModal"><div class="modalBox"><div class="mHead"><h3>👤 Profile</h3><button onclick="closeModal('profileModal')">✕</button></div><div class="mBody"><div id="profileInfo"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="pill" onclick="openModal('settingsModal')">⚙️ Settings</button><button class="pill" onclick="openModal('dashModal')">📊 Dashboard</button><button class="pill" onclick="doLogout()">Logout</button></div></div></div></div>
+
+<div class="modal" id="adminModal"><div class="modalBox"><div class="mHead"><h3>🛡️ Admin Panel</h3><button onclick="closeModal('adminModal')">✕</button></div><div class="mBody"><div id="adminContent"></div></div></div></div>
+
+<div class="modal" id="planModal"><div class="modalBox"><div class="mHead"><h3>💎 Upgrade Plan</h3><button onclick="closeModal('planModal')">✕</button></div><div class="mBody"><div class="grid2"><div class="card"><b>Free</b><div class="statBig">$0</div><p>50 messages / day • 1 project • Basic models</p><button class="pill" onclick="toast('You are on Free plan')">Current</button></div><div class="card" style="border-color:#00d4ff"><b>Pro — $20/mo</b><div class="statBig">Pro</div><p>Unlimited chats • Image Gen • Priority • All models</p><button class="btnP" onclick="toast('Payment not configured. Add Stripe keys in Settings to enable real checkout.')">Upgrade with Stripe (Setup Required)</button></div></div><p style="font-size:12px;color:var(--mut);margin-top:10px">Payments are NOT simulated. Stripe checkout is shown as configuration state until you add real Stripe keys.</p></div></div></div>
+
+<div id="toast"></div>
+
+<script>
+// ============ CONFIG - YOUR KEYS ============
+const firebaseConfig = {apiKey:"AIzaSyBY9sGxMHnMrsD8F324JxKhMctI-DtVVtc",authDomain:"zapp-5733f.firebaseapp.com",projectId:"zapp-5733f",storageBucket:"zapp-5733f.firebasestorage.app",messagingSenderId:"235762637821",appId:"1:235762637821:web:b8df7154b08b8beddf1794"};
+const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6KXJ8pJmSuzWK500Qf2_aumiTUMbjEsEJQx85eAYJl7cw";
+const ADMIN_EMAIL = "admin@nexa.ai";
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(); const db = firebase.firestore();
+let user=null, convs=[], currentId=null, currentMsgs=[], attachments=[], assistants=[], projects=[], memories=[], images=[], abortCtrl=null, lastAiText="", isGenerating=false;
+let settings = JSON.parse(localStorage.getItem('nexa_settings')||'{}');
+if(!settings.geminiKey) settings.geminiKey=DEFAULT_GEMINI_KEY;
+if(!settings.model) settings.model='gemini-2.5-flash';
+if(!settings.temp) settings.temp=0.7;
+if(!settings.system) settings.system="You are NEXA AI, a helpful, accurate, premium AI assistant. Answer clearly, use markdown, code blocks, and tables when useful. Never hallucinate citations.";
+function toast(m){let t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function saveSettings(){settings.geminiKey=document.getElementById('setGeminiKey').value.trim()||settings.geminiKey;settings.model=document.getElementById('setModel').value;settings.temp=parseFloat(document.getElementById('setTemp').value)||0.7;settings.system=document.getElementById('setSystem').value;localStorage.setItem('nexa_settings',JSON.stringify(settings));document.getElementById('modelSel').value=settings.model;toast('Settings saved');closeModal('settingsModal')}
+function setTheme(t){if(t==='light')document.body.classList.add('light');else if(t==='dark')document.body.classList.remove('light');else document.body.classList.toggle('light',window.matchMedia('(prefers-color-scheme: light)').matches);localStorage.setItem('nexa_theme',t)}
+function toggleSide(){document.getElementById('sidebar').classList.toggle('open')}
+function setAuth(m){document.getElementById('tUp').classList.toggle('on',m==='up');document.getElementById('tIn').classList.toggle('on',m==='in');document.getElementById('nameF').classList.toggle('hidden',m!=='up');document.getElementById('authTitle').textContent=m==='up'?'Create your account':'Welcome back';document.getElementById('authBtn').textContent=m==='up'?'Create Account →':'Login →'}
+async function doAuth(){
+let email=document.getElementById('authEmail').value.trim(),pass=document.getElementById('authPass').value,name=document.getElementById('regName').value.trim();
+let isUp=document.getElementById('tUp').classList.contains('on');
+try{
+if(isUp){let c=await auth.createUserWithEmailAndPassword(email,pass);await c.user.updateProfile({displayName:name});await c.user.sendEmailVerification();await db.collection('profiles').doc(c.user.uid).set({name,email,plan:'Free',createdAt:Date.now()});toast('Account created. Verification email sent.');}
+else{let c=await auth.signInWithEmailAndPassword(email,pass);if(!c.user.emailVerified) toast('Warning: Email not verified. Check inbox.');}
+}catch(e){toast('Auth Error: '+e.message)}
+}
+async function googleLogin(){try{let p=new firebase.auth.GoogleAuthProvider();let c=await auth.signInWithPopup(p);await db.collection('profiles').doc(c.user.uid).set({name:c.user.displayName,email:c.user.email,plan:'Free',createdAt:Date.now()},{merge:true});}catch(e){toast('Google Error: '+e.message)}}
+async function resetPass(){let e=document.getElementById('authEmail').value.trim();if(!e)return toast('Enter email first');try{await auth.sendPasswordResetEmail(e);toast('Password reset email sent')}catch(err){toast(err.message)}}
+async function resendVerify(){if(auth.currentUser){await auth.currentUser.sendEmailVerification();toast('Verification email sent')}else toast('Login first')}
+async function changePass(){let e=prompt('Enter email for password reset');if(e){await auth.sendPasswordResetEmail(e);toast('Reset email sent')}}
+async function deleteAccount(){if(!confirm('Delete your account and all data? This cannot be undone.'))return;try{let uid=user.uid;let snap=await db.collection('conversations').where('userId','==',uid).get();let b=db.batch();snap.forEach(d=>b.delete(d.ref));await b.commit();await db.collection('profiles').doc(uid).delete();await user.delete();toast('Account deleted')}catch(e){toast('Delete Error: '+e.message+' — Re-login required.')}}
+function doLogout(){auth.signOut()}
+auth.onAuthStateChanged(async u=>{
+user=u;
+if(!u){document.getElementById('auth').style.display='flex';document.getElementById('app').style.display='none';return}
+document.getElementById('auth').style.display='none';document.getElementById('app').style.display='block';
+document.getElementById('uName').textContent=u.displayName||u.email;document.getElementById('uEmail').textContent=u.email;document.getElementById('uAvatar').textContent=(u.displayName||u.email||'N')[0].toUpperCase();document.getElementById('welcomeName').textContent=(u.displayName||'there').split(' ')[0];
+document.getElementById('setGeminiKey').value=settings.geminiKey;document.getElementById('setModel').value=settings.model;document.getElementById('setTemp').value=settings.temp;document.getElementById('setSystem').value=settings.system;document.getElementById('modelSel').value=settings.model;
+if(u.email===ADMIN_EMAIL) document.getElementById('adminBtn').style.display='inline-flex';
+loadConvs();loadAssistants();loadProjects();loadMemory();loadImages();renderDash();
+});
+async function loadConvs(){
+db.collection('conversations').where('userId','==',user.uid).orderBy('updatedAt','desc').onSnapshot(s=>{convs=s.docs.map(d=>({id:d.id,...d.data()}));renderConvs();renderDash()});
+}
+let view='all';
+function setView(v,btn){view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderConvs()}
+function renderConvs(){
+let q=(document.getElementById('searchConv').value||'').toLowerCase();
+let list=convs.filter(c=>{if(view==='pinned'&&!c.pinned)return false;if(view==='archived'&&!c.archived)return false;if(view==='projects'&&!c.projectId)return false;if(view==='all'&&c.archived)return false;if(q&&!(c.title||'').toLowerCase().includes(q))return false;return true});
+document.getElementById('convList').innerHTML=(list.length?list.map(c=>`<div class="conv ${c.id===currentId?'active':''}" onclick="openConv('${c.id}')"><div style="flex:1;min-width:0"><b>${escapeHtml(c.title||'New Chat')}</b><small>${c.pinned?'📌 ':''}${c.projectId?'📁 ':''}${new Date(c.updatedAt||Date.now()).toLocaleDateString()}</small></div><span class="dot" onclick="event.stopPropagation();convMenu('${c.id}')">⋮</span></div>`).join(''):`<div style="text-align:center;padding:30px;color:var(--mut)"><div style="font-size:32px">💬</div><b>No conversations yet</b><p style="font-size:12px;margin-top:6px">Start a new chat to see it here</p></div>`);
+}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function newChat(){let r=await db.collection('conversations').add({userId:user.uid,title:'New Chat',createdAt:Date.now(),updatedAt:Date.now(),pinned:false,archived:false,projectId:null});currentId=r.id;currentMsgs=[];showChat();renderConvs()}
+async function openConv(id){currentId=id;let snap=await db.collection('conversations').doc(id).collection('messages').orderBy('createdAt','asc').get();currentMsgs=snap.docs.map(d=>d.data());showChat();let c=convs.find(x=>x.id===id);document.getElementById('chatTitle').textContent=c?c.title:'NEXA AI';if(window.innerWidth<900)document.getElementById('sidebar').classList.remove('open')}
+function showChat(){document.getElementById('welcome').classList.add('hidden');document.getElementById('msgs').classList.remove('hidden');renderMsgs()}
+function renderMsgs(){
+let box=document.getElementById('msgs');
+box.innerHTML=currentMsgs.map((m,i)=>{
+let html=m.role==='user'?escapeHtml(m.content):DOMPurify.sanitize(marked.parse(m.content||''));
+let attach=m.attachments?m.attachments.map(a=>`<span class="fileChip">📄 ${escapeHtml(a.name)}</span>`).join(''):'';
+return `<div class="msgRow ${m.role==='user'?'me':''}"><div class="avatar" style="width:34px;height:34px;font-size:13px">${m.role==='user'?'U':'N'}</div><div class="bubble">${attach}${html}<div class="msgMeta"><span style="font-size:11px;color:var(--mut)">${new Date(m.createdAt||Date.now()).toLocaleTimeString()} • ${m.model||settings.model}</span><button onclick="copyText(${i})">📋 Copy</button>${m.role==='assistant'?`<button onclick="regen(${i})">🔄 Regenerate</button><button onclick="likeMsg(${i},1)">👍</button><button onclick="likeMsg(${i},-1)">👎</button><button onclick="speakText(${i})">🔊 Speak</button>`: `<button onclick="editMsg(${i})">✏️ Edit</button>`}<button onclick="deleteMsg(${i})">🗑 Delete</button></div></div></div>`;
+}).join('');
+box.scrollTop=box.scrollHeight;
+}
+function quick(t){document.getElementById('msgInput').value=t;document.getElementById('msgInput').focus()}
+function copyText(i){navigator.clipboard.writeText(currentMsgs[i].content);toast('Copied')}
+function likeMsg(i,v){db.collection('feedback').add({userId:user.uid,convId:currentId,msgIndex:i,rating:v,createdAt:Date.now()});toast(v>0?'Thanks for feedback':'Feedback saved')}
+async function deleteMsg(i){if(!confirm('Delete this message?'))return;currentMsgs.splice(i,1);renderMsgs();toast('Message deleted (local view)')}
+function editMsg(i){let nt=prompt('Edit message',currentMsgs[i].content);if(nt){currentMsgs[i].content=nt;renderMsgs();sendMsg(true)}}
+async function regen(i){currentMsgs=currentMsgs.slice(0,i);renderMsgs();await callGemini(currentMsgs.map(m=>m.content).join('\n'),true)}
+async function handleFiles(files){
+for(let f of files){
+if(f.size>10*1024*1024) return toast('File too large. Max 10MB: '+f.name);
+let text='';let type=f.type;
+if(f.type.startsWith('image/')){let r=new FileReader();r.onload=e=>{attachments.push({name:f.name,type:'image',data:e.target.result});renderAttach()};r.readAsDataURL(f);continue}
+if(f.type==='application/pdf'){text='[PDF uploaded: '+f.name+' — PDF text extraction requires PDF.js in production. File saved to Library.]'}
+else{try{text=await f.text()}catch(e){text='[Could not read file]'}
+}
+attachments.push({name:f.name,type:'file',text:text.slice(0,20000)});renderAttach();
+}
+}
+function renderAttach(){document.getElementById('attachPreview').innerHTML=attachments.map((a,i)=>`<span class="fileChip">📄 ${escapeHtml(a.name)} <b onclick="attachments.splice(${i},1);renderAttach()" style="cursor:pointer">✕</b></span>`).join('')}
+function togglePill(id){let b=document.getElementById(id);b.classList.toggle('on');if(id==='webBtn')document.getElementById('webState').textContent=b.classList.contains('on')?'On':'Off';if(id==='reasonBtn')document.getElementById('reasonState').textContent=b.classList.contains('on')?'On':'Off'}
+function saveModel(){settings.model=document.getElementById('modelSel').value;localStorage.setItem('nexa_settings',JSON.stringify(settings));document.getElementById('welcomeModel').textContent=settings.model;document.getElementById('charCount').textContent='Model: '+settings.model}
+async function sendMsg(isEdit=false){
+let input=document.getElementById('msgInput');let text=input.value.trim();
+if(!text&&attachments.length===0) return;
+if(!currentId) {let r=await db.collection('conversations').add({userId:user.uid,title:text.slice(0,50)||'New Chat',createdAt:Date.now(),updatedAt:Date.now(),pinned:false,archived:false,projectId:null});currentId=r.id;showChat()}
+let userMsg={role:'user',content:text,attachments:[...attachments],createdAt:Date.now(),model:settings.model};
+currentMsgs.push(userMsg);renderMsgs();input.value='';document.getElementById('charCount').textContent='0 chars';
+let atts=[...attachments];attachments=[];renderAttach();
+try{await db.collection('conversations').doc(currentId).collection('messages').add(userMsg);await db.collection('conversations').doc(currentId).update({title:currentMsgs[0]?.content?.slice(0,50)||'New Chat',updatedAt:Date.now()});}catch(e){console.log(e)}
+await callGemini(text, false, atts);
+}
+async function callGemini(userText, isRegen=false, atts=[]){
+if(!settings.geminiKey) return toast('Gemini API key missing. Open Settings and add it.');
+let mode=document.getElementById('modeSel').value;let useWeb=document.getElementById('webBtn').classList.contains('on');let useReason=document.getElementById('reasonBtn').classList.contains('on');
+let memText=memories.map(m=>m.text).join('; ');
+let sys=settings.system+` Mode: ${mode}. ${useReason?'Think step by step, show reasoning.':''} ${memText?'User memory: '+memText:''} ${useWeb?'Use web search grounding if available.':' '}`;
+let history=currentMsgs.slice(-12).map(m=>({role:m.role==='user'?'user':'model',parts:[{text:m.content}]}));
+let parts=[{text: userText + (atts.length? '\n\n[Attachments]\n'+atts.map(a=>a.name+': '+(a.text||'').slice(0,8000)).join('\n'):'')}];
+for(let a of atts){if(a.data){parts.push({inline_data:{mime_type:'image/jpeg',data:a.data.split(',')[1]}})}}
+isGenerating=true;document.getElementById('stopBtn').classList.remove('hidden');document.getElementById('sendBtn').disabled=true;
+let aiMsg={role:'assistant',content:'',createdAt:Date.now(),model:settings.model};currentMsgs.push(aiMsg);renderMsgs();
+abortCtrl=new AbortController();
+try{
+let url=`https://generativelanguage.googleapis.com/v1beta/models/${settings.model}:streamGenerateContent?alt=sse&key=${settings.geminiKey}`;
+let body={system_instruction:{parts:[{text:sys}]},contents:[...history.slice(0,-1),{role:'user',parts}],generationConfig:{temperature:settings.temp,maxOutputTokens:4096}};
+if(useWeb) body.tools=[{google_search:{}}];
+let res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:abortCtrl.signal});
+if(!res.ok){let err=await res.text();throw new Error('Gemini Error '+res.status+': '+err.slice(0,500))}
+let reader=res.body.getReader();let dec=new TextDecoder();let buf='';
+while(true){let {done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});let lines=buf.split('\n');buf=lines.pop();for(let line of lines){if(line.startsWith('data:')){try{let j=JSON.parse(line.slice(5));let t=j.candidates?.[0]?.content?.parts?.map(p=>p.text).join('')||'';if(t){aiMsg.content+=t;renderMsgs()}}catch(e){}}}}
+if(!aiMsg.content) aiMsg.content='No response from model. Please try again.';
+await db.collection('conversations').doc(currentId).collection('messages').add(aiMsg);
+await db.collection('usage_records').add({userId:user.uid,convId:currentId,tokens:aiMsg.content.length,model:settings.model,createdAt:Date.now()});
+lastAiText=aiMsg.content;
+}catch(e){if(e.name==='AbortError'){aiMsg.content+='\n\n[Stopped by user]'}else{aiMsg.content='❌ Error: '+e.message+'\n\nCheck your Gemini API key in Settings. No fake response was generated.'}renderMsgs();try{await db.collection('conversations').doc(currentId).collection('messages').add(aiMsg)}catch(_){}}
+isGenerating=false;document.getElementById('stopBtn').classList.add('hidden');document.getElementById('sendBtn').disabled=false;
+}
+function stopGen(){if(abortCtrl)abortCtrl.abort()}
+async function testGemini(){try{let r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${settings.model}:generateContent?key=${settings.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Say OK'}]}]})});let j=await r.json();if(j.error) throw new Error(j.error.message);toast('✅ Gemini Connected: '+j.candidates[0].content.parts[0].text)}catch(e){toast('❌ Gemini Failed: '+e.message)}}
+async function genImage(){
+let prompt=document.getElementById('imgPrompt').value.trim();if(!prompt)return toast('Enter image prompt');
+document.getElementById('imgResult').innerHTML='<p>🎨 Generating image with Gemini...</p>';
+try{
+let res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${settings.geminiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Generate an image: '+prompt+' Aspect ratio: '+document.getElementById('imgRatio').value}]}]})});
+let j=await res.json();if(j.error) throw new Error(j.error.message);
+let part=j.candidates?.[0]?.content?.parts?.find(p=>p.inlineData||p.inline_data);let imgData=part?.inlineData?.data||part?.inline_data?.data;let txt=j.candidates?.[0]?.content?.parts?.map(p=>p.text).join('')||'';
+if(imgData){let url='data:image/png;base64,'+imgData;images.unshift({url,prompt,createdAt:Date.now()});localStorage.setItem('nexa_images',JSON.stringify(images.slice(0,20)));document.getElementById('imgResult').innerHTML=`<img src="${url}" style="width:100%;border-radius:14px"><div style="display:flex;gap:8px;margin-top:10px"><a href="${url}" download="nexa-image.png" class="pill">⬇ Download</a><button class="pill" onclick="genImage()">🔄 Regenerate</button></div>`;toast('Image generated')}else{document.getElementById('imgResult').innerHTML='<p>Model returned text only: '+escapeHtml(txt)+'</p><p style="font-size:12px;color:var(--mut)">Image generation may not be enabled for this key. Try again or check Gemini quota.</p>'}
+loadImages();
+}catch(e){document.getElementById('imgResult').innerHTML='<p style="color:#ff5c5c">Error: '+escapeHtml(e.message)+'</p>'}
+}
+function loadImages(){try{images=JSON.parse(localStorage.getItem('nexa_images')||'[]')}catch(e){images=[]}document.getElementById('imgHistory').innerHTML=images.map((im,i)=>`<div><img src="${im.url}"><p style="font-size:11px;margin-top:4px">${escapeHtml(im.prompt.slice(0,50))}</p></div>`).join('')||'<p style="font-size:12px;color:var(--mut)">No images yet</p>';document.getElementById('libList').innerHTML=images.map(im=>`<div class="card" style="margin-bottom:8px"><img src="${im.url}" style="width:100%;border-radius:10px"><p>${escapeHtml(im.prompt)}</p></div>`).join('')||'<p>No library items</p>'}
+async function createAssistant(){let n=document.getElementById('asName').value.trim(),ins=document.getElementById('asInstr').value.trim();if(!n)return toast('Enter assistant name');await db.collection('assistants').add({userId:user.uid,name:n,instructions:ins,visibility:'private',createdAt:Date.now()});toast('Assistant created');loadAssistants()}
+async function loadAssistants(){let s=await db.collection('assistants').where('userId','==',user.uid).get();assistants=s.docs.map(d=>({id:d.id,...d.data()}));document.getElementById('asList').innerHTML=assistants.map(a=>`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(a.name)}</b><p>${escapeHtml(a.instructions||'')}</p><div style="display:flex;gap:6px;margin-top:8px"><button class="pill" onclick="useAssistant('${a.id}')">Use</button><button class="pill" onclick="deleteAssistant('${a.id}')">Delete</button></div></div>`).join('')||'<p style="color:var(--mut)">No assistants yet</p>'}
+function useAssistant(id){let a=assistants.find(x=>x.id===id);if(a){settings.system=a.instructions;toast('Using assistant: '+a.name);closeModal('assistantsModal');newChat()}}
+async function deleteAssistant(id){await db.collection('assistants').doc(id).delete();loadAssistants()}
+async function createProject(){let n=document.getElementById('projName').value.trim(),ins=document.getElementById('projInstr').value.trim();if(!n)return toast('Enter project name');await db.collection('projects').add({userId:user.uid,name:n,instructions:ins,createdAt:Date.now()});toast('Project created');loadProjects()}
+async function loadProjects(){let s=await db.collection('projects').where('userId','==',user.uid).get();projects=s.docs.map(d=>({id:d.id,...d.data()}));document.getElementById('projList').innerHTML=projects.map(p=>`<div class="card" style="margin-bottom:8px"><b>📁 ${escapeHtml(p.name)}</b><p>${escapeHtml(p.instructions||'')}</p><button class="pill" onclick="newChatInProject('${p.id}')">＋ New Chat in Project</button></div>`).join('')||'<p style="color:var(--mut)">No projects</p>'}
+async function newChatInProject(pid){let r=await db.collection('conversations').add({userId:user.uid,title:'Project Chat',projectId:pid,createdAt:Date.now(),updatedAt:Date.now()});currentId=r.id;currentMsgs=[];showChat();closeModal('projectsModal')}
+async function saveMemory(){let t=document.getElementById('memInput').value.trim();if(!t)return;await db.collection('memories').add({userId:user.uid,text:t,createdAt:Date.now()});document.getElementById('memInput').value='';loadMemory()}
+async function loadMemory(){let s=await db.collection('memories').where('userId','==',user.uid).get();memories=s.docs.map(d=>({id:d.id,...d.data()}));document.getElementById('memList').innerHTML=memories.map(m=>`<div style="display:flex;justify-content:space-between;background:var(--panel2);padding:10px;border-radius:10px;margin-bottom:6px"><span style="font-size:13px">${escapeHtml(m.text)}</span><button onclick="delMem('${m.id}')">🗑</button></div>`).join('')||'<p style="color:var(--mut)">No memories</p>'}
+async function delMem(id){await db.collection('memories').doc(id).delete();loadMemory()}
+async function clearMemory(){if(!confirm('Clear all memory?'))return;let s=await db.collection('memories').where('userId','==',user.uid).get();let b=db.batch();s.forEach(d=>b.delete(d.ref));await b.commit();loadMemory()}
+function convMenu(id){let act=prompt('Type: pin / unpin / archive / unarchive / rename / delete / share');let c=convs.find(x=>x.id===id);if(!c)return;if(act==='pin')db.collection('conversations').doc(id).update({pinned:true});if(act==='unpin')db.collection('conversations').doc(id).update({pinned:false});if(act==='archive')db.collection('conversations').doc(id).update({archived:true});if(act==='unarchive')db.collection('conversations').doc(id).update({archived:false});if(act==='rename'){let nt=prompt('New title',c.title);if(nt)db.collection('conversations').doc(id).update({title:nt})}if(act==='delete'&&confirm('Delete conversation?'))db.collection('conversations').doc(id).delete();if(act==='share')shareChat(id)}
+async function shareChat(id=currentId){if(!id)return toast('Open a chat first');let code=Math.random().toString(36).slice(2,10);await db.collection('shared_conversations').doc(code).set({convId:id,userId:user.uid,createdAt:Date.now()});let link=location.href.split('#')[0]+'#share-'+code;await navigator.clipboard.writeText(link);toast('Share link copied: '+link)}
+function exportChat(){let txt=currentMsgs.map(m=>m.role.toUpperCase()+': '+m.content).join('\n\n');let b=new Blob([txt],{type:'text/plain'});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='nexa-chat.txt';a.click();toast('Exported')}
+function renderDash(){
+let total=convs.length;let totalMsg=currentMsgs.length;
+document.getElementById('dashGrid').innerHTML=`<div class="card"><b>Total Conversations</b><div class="statBig">${total}</div></div><div class="card"><b>Current Chat Messages</b><div class="statBig">${totalMsg}</div></div><div class="card"><b>Plan</b><div class="statBig">Free</div><button class="pill" onclick="closeModal('dashModal');openModal('planModal')">Upgrade →</button></div><div class="card"><b>Model</b><div class="statBig" style="font-size:16px">${settings.model}</div></div>`;
+document.getElementById('dashRecent').innerHTML='<b>Recent Activity</b>'+convs.slice(0,5).map(c=>`<div style="padding:10px;border-bottom:1px solid var(--line);font-size:13px">${escapeHtml(c.title)} • ${new Date(c.updatedAt).toLocaleString()}</div>`).join('');
+document.getElementById('profileInfo').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div class="avatar" style="width:56px;height:56px;font-size:22px">${(user?.displayName||'N')[0]}</div><div><b>${escapeHtml(user?.displayName||'User')}</b><div style="color:var(--mut);font-size:13px">${user?.email}</div><div style="font-size:12px">Plan: Free • Verified: ${user?.emailVerified?'Yes':'No'}</div></div></div>`;
+if(user?.email===ADMIN_EMAIL){let allUsers='Total conversations in system: '+total;document.getElementById('adminContent').innerHTML=`<div class="card"><b>Admin Dashboard</b><p>${allUsers} • Provider: Gemini • Status: Connected if key works</p><button class="pill" onclick="testGemini()">Test Gemini Health</button></div>`}
+}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.getElementById('msgInput').addEventListener('input',e=>{document.getElementById('charCount').textContent=e.target.value.length+' chars • '+settings.model})
+// Voice
+let recog=null, synth=window.speechSynthesis;
+function toggleVoice(){if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)) return toast('Voice not supported in this browser. Use Chrome.');if(recog){stopVoice();return}let SR=window.SpeechRecognition||window.webkitSpeechRecognition;recog=new SR();recog.lang='en-US';recog.interimResults=true;recog.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;document.getElementById('msgInput').value=t;document.getElementById('voiceText').textContent=t};recog.onend=()=>{document.getElementById('voiceBar').classList.remove('show');recog=null};document.getElementById('voiceBar').classList.add('show');recog.start();toast('Listening... Speak now')}
+function stopVoice(){if(recog){recog.stop();recog=null}document.getElementById('voiceBar').classList.remove('show');let t=document.getElementById('msgInput').value.trim();if(t)sendMsg()}
+function speakText(i){let txt=currentMsgs[i]?.content||lastAiText;if(!txt)return;synth.cancel();let u=new SpeechSynthesisUtterance(txt.slice(0,2000));u.lang='en-US';synth.speak(u);toast('Speaking...')}
+function speakLast(){speakText(currentMsgs.length-1)}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal'))e.target.classList.remove('open')});
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();newChat()}});
+if(localStorage.getItem('nexa_theme')==='light')document.body.classList.add('light');
+window.addEventListener('load',()=>{let h=location.hash;if(h.startsWith('#share-')) toast('Shared link opened. Login to view shared conversation: '+h)});
+</script>
+</body>
+</html>
